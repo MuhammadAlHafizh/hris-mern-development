@@ -14,7 +14,7 @@ router.use("/users", userRoutes);
 router.use("/positions", positionRoutes);
 router.use("/annual-leaves", annualandLeaveRoutes);
 router.use("/activity", activityRoutes);
-router.use("/leave", leaveRoutes);
+router.use("/leaves", leaveRoutes);
 router.use("/announcements", announncementRoutes);
 router.use("/attendance", attendanceRoutes);
 

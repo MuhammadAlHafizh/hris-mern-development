@@ -155,12 +155,15 @@ export const cancelLeave = async (req, res) => {
             });
         }
 
-        // Cari status "Cancelled"
-        const cancelledStatus = await LeaveStatus.findOne({ name: "Cancelled" });
+        // Cari status "Cancelled" - dengan error handling yang lebih baik
+        let cancelledStatus = await LeaveStatus.findOne({ name: "Cancelled" });
+
+        // Jika status Cancelled tidak ditemukan, buat secara otomatis
         if (!cancelledStatus) {
-            return res.status(500).json({
-                statusCode: 500,
-                message: "Leave status configuration error"
+            console.warn("Cancelled status not found, creating automatically...");
+            cancelledStatus = await LeaveStatus.create({
+                name: "Cancelled",
+                flag: 3 // atau flag yang sesuai dengan logic Anda
             });
         }
 
@@ -184,6 +187,169 @@ export const cancelLeave = async (req, res) => {
         });
     } catch (err) {
         console.error("Cancel Leave Error:", err);
+        res.status(500).json({
+            statusCode: 500,
+            message: err.message
+        });
+    }
+};
+
+// GET /leaves/my-leaves - Untuk staff melihat cuti mereka sendiri
+export const getMyLeaves = async (req, res) => {
+    try {
+        const { year, status, userId } = req.query;
+
+        // Gunakan userId dari query jika ada (untuk admin melihat cuti staff),
+        // jika tidak gunakan user ID dari token (untuk staff melihat cuti sendiri)
+        const currentUserId = userId || req.user._id;
+
+        console.log("Getting leaves for user:", currentUserId, "Filters:", { year, status });
+
+        let query = { user: currentUserId };
+
+        // Filter by year
+        if (year) {
+            const startDate = new Date(parseInt(year), 0, 1);
+            const endDate = new Date(parseInt(year) + 1, 0, 1);
+            query.startDate = { $gte: startDate, $lt: endDate };
+        }
+
+        // Filter by status
+        if (status && status !== 'all') {
+            const statusDoc = await LeaveStatus.findOne({ name: status });
+            if (statusDoc) {
+                query.status = statusDoc._id;
+            }
+        }
+
+        const leaves = await Leave.find(query)
+            .populate("status", "name flag")
+            .populate("user", "name email position")
+            .populate("approvedBy", "name email")
+            .sort({ createdAt: -1 });
+
+        console.log(`Found ${leaves.length} leaves for user ${currentUserId}`);
+
+        res.json({
+            statusCode: 200,
+            message: "Successfully retrieved leaves",
+            data: leaves
+        });
+    } catch (err) {
+        console.error("Get My Leaves Error:", err);
+        res.status(500).json({
+            statusCode: 500,
+            message: err.message
+        });
+    }
+};
+
+// GET /leaves/history - Untuk summary cuti
+export const getLeaveHistory = async (req, res) => {
+    try {
+        const { year, userId } = req.query;
+
+        // Gunakan userId dari query jika ada, jika tidak gunakan dari token
+        const currentUserId = userId || req.user._id;
+        const currentYear = year ? parseInt(year) : new Date().getFullYear();
+
+        console.log("Getting leave history for user:", currentUserId, "Year:", currentYear);
+
+        const startDate = new Date(currentYear, 0, 1);
+        const endDate = new Date(currentYear + 1, 0, 1);
+
+        // Get annual leave allocation
+        const annualLeave = await AnnualLeave.findOne({
+            user: currentUserId,
+            year: currentYear
+        });
+
+        // Get approved leaves for the year
+        const approvedStatus = await LeaveStatus.findOne({ name: "Approved" });
+        const leaves = await Leave.find({
+            user: currentUserId,
+            startDate: { $gte: startDate, $lt: endDate },
+            status: approvedStatus ? approvedStatus._id : null
+        });
+
+        // Calculate used days
+        const usedDays = leaves.reduce((total, leave) => total + leave.days, 0);
+
+        const totalDays = annualLeave ? annualLeave.totalDays : 12; // Default 12 hari jika tidak ada allocation
+        const remainingDays = Math.max(0, totalDays - usedDays);
+
+        const summary = {
+            totalDays,
+            usedDays,
+            remainingDays
+        };
+
+        console.log(`Leave history summary for user ${currentUserId}:`, summary);
+
+        res.json({
+            statusCode: 200,
+            message: "Successfully retrieved leave history",
+            data: {
+                year: currentYear,
+                summary,
+                leaves
+            }
+        });
+    } catch (err) {
+        console.error("Get Leave History Error:", err);
+        res.status(500).json({
+            statusCode: 500,
+            message: err.message
+        });
+    }
+};
+
+// List leaves (for admin/manager)
+export const listLeaves = async (req, res) => {
+    try {
+        const { mine, status, year, userId } = req.query;
+        let filter = {};
+
+        // Jika query mine=true, hanya tampilkan cuti user sendiri
+        if (mine === "true") {
+            filter.user = req.user._id;
+        }
+
+        // Jika ada userId, filter berdasarkan userId (untuk admin melihat cuti staff tertentu)
+        if (userId && !mine) {
+            filter.user = userId;
+        }
+
+        // Filter by status
+        if (status) {
+            const statusDoc = await LeaveStatus.findOne({ name: status });
+            if (statusDoc) {
+                filter.status = statusDoc._id;
+            }
+        }
+
+        // Filter by year
+        if (year) {
+            const yearNum = parseInt(year);
+            filter.startDate = {
+                $gte: new Date(`${yearNum}-01-01`),
+                $lte: new Date(`${yearNum}-12-31`)
+            };
+        }
+
+        const leaves = await Leave.find(filter)
+            .populate("user", "name email position department")
+            .populate("status", "name flag")
+            .populate("approvedBy", "name email")
+            .sort({ createdAt: -1 });
+
+        res.json({
+            statusCode: 200,
+            message: "Leaves retrieved successfully",
+            data: leaves
+        });
+    } catch (err) {
+        console.error("List Leaves Error:", err);
         res.status(500).json({
             statusCode: 500,
             message: err.message
@@ -392,6 +558,7 @@ export const confirmLeave = async (req, res) => {
 };
 
 // Reverse Leave (Admin/Manager mengubah status Approved => Reverse)
+// Reverse Leave (Admin/Manager mengubah status Approved => Pending dan menghitung ulang hari cuti yang sudah terpakai)
 export const reverseLeave = async (req, res) => {
     try {
         const { managerNotes } = req.body;
@@ -437,34 +604,66 @@ export const reverseLeave = async (req, res) => {
             });
         }
 
-        // Cari status "Reverse"
-        const reverseStatus = await LeaveStatus.findOne({ name: "Reverse" });
-        if (!reverseStatus) {
+        // Hitung hari cuti yang sudah terpakai berdasarkan tanggal hari ini
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set ke awal hari untuk perbandingan yang akurat
+
+        const startDate = new Date(leave.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(leave.endDate);
+        endDate.setHours(0, 0, 0, 0);
+
+        let actualUsedDays = 0;
+
+        // Jika hari ini sudah melewati start date cuti
+        if (today >= startDate) {
+            // Tentukan tanggal akhir yang efektif (hari ini atau end date, mana yang lebih kecil)
+            const effectiveEndDate = today < endDate ? today : endDate;
+
+            // Hitung hari dari start date sampai effective end date
+            actualUsedDays = Math.floor((effectiveEndDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+            // Pastikan tidak melebihi total hari cuti dan tidak kurang dari 0
+            actualUsedDays = Math.max(0, Math.min(actualUsedDays, leave.days));
+        }
+        // Jika hari ini sebelum start date, actualUsedDays tetap 0
+
+        console.log(`Original days: ${leave.days}, Actual used days: ${actualUsedDays}, Today: ${today.toISOString().split('T')[0]}`);
+
+        // Cari status "Pending"
+        const pendingStatus = await LeaveStatus.findOne({ name: "Pending" });
+        if (!pendingStatus) {
             return res.status(500).json({
                 statusCode: 500,
-                message: "Leave status configuration error"
+                message: "Leave status configuration error - Pending status not found"
             });
         }
 
-        // Kembalikan cuti ke kuota
+        // Kembalikan seluruh cuti yang sebelumnya dipotong
         annualLeave.usedDays -= leave.days;
+
+        // Potong kembali hanya untuk hari yang sudah terpakai
+        annualLeave.usedDays += actualUsedDays;
+
         if (annualLeave.usedDays < 0) annualLeave.usedDays = 0;
         await annualLeave.save();
 
-        // Update leave
-        leave.status = reverseStatus._id;
-        leave.approvedBy = approverId;
-        leave.managerNotes = managerNotes || `Leave reversed by ${req.user.name} on ${new Date().toLocaleDateString()}`;
+        // Update leave: status kembali ke Pending
+        leave.status = pendingStatus._id;
+        leave.approvedBy = null; // Reset approvedBy karena status kembali pending
+        leave.managerNotes = managerNotes || `Leave reversed by ${req.user.name} on ${new Date().toLocaleDateString()}. ${actualUsedDays} days already used.`;
 
+        // Simpan perubahan
         await leave.save();
         await leave.populate("status", "name flag");
-        await leave.populate("approvedBy", "name email");
+        await leave.populate("user", "name email");
 
         res.json({
             statusCode: 200,
-            message: "Leave successfully reversed",
+            message: `Leave successfully reversed to Pending status. ${actualUsedDays} days already used and deducted from quota.`,
             data: {
                 leave,
+                actualUsedDays,
                 annualLeave: {
                     totalDays: annualLeave.totalDays,
                     usedDays: annualLeave.usedDays,
@@ -475,181 +674,6 @@ export const reverseLeave = async (req, res) => {
 
     } catch (err) {
         console.error("Reverse Leave Error:", err);
-        res.status(500).json({
-            statusCode: 500,
-            message: err.message
-        });
-    }
-};
-
-// Reject Leave (Admin/Manager menolak cuti Pending => Cancelled)
-export const rejectLeave = async (req, res) => {
-    try {
-        const { managerNotes } = req.body;
-        const { id } = req.params;
-        const approverId = req.user._id;
-        const approverRole = req.user.role;
-
-        // Validasi role
-        if (!["admin", "manager", "hr"].includes(approverRole)) {
-            return res.status(403).json({
-                statusCode: 403,
-                message: "Only admin, manager, or HR can reject leave"
-            });
-        }
-
-        // Cari data cuti
-        const leave = await Leave.findById(id).populate("user", "name email").populate("status", "name");
-        if (!leave) {
-            return res.status(404).json({
-                statusCode: 404,
-                message: "Leave data not found"
-            });
-        }
-
-        // Validasi: hanya cuti dengan status Pending yang bisa di-reject
-        if (leave.status.name !== "Pending") {
-            return res.status(400).json({
-                statusCode: 400,
-                message: `Only pending leave can be rejected. Current status: ${leave.status.name}`
-            });
-        }
-
-        // Cari status "Cancelled"
-        const cancelledStatus = await LeaveStatus.findOne({ name: "Cancelled" });
-        if (!cancelledStatus) {
-            return res.status(500).json({
-                statusCode: 500,
-                message: "Leave status configuration error"
-            });
-        }
-
-        // Update leave
-        leave.status = cancelledStatus._id;
-        leave.approvedBy = approverId;
-        if (managerNotes) {
-            leave.managerNotes = managerNotes;
-        }
-
-        await leave.save();
-        await leave.populate("status", "name flag");
-        await leave.populate("approvedBy", "name email");
-
-        res.json({
-            statusCode: 200,
-            message: "Leave successfully rejected",
-            data: leave
-        });
-
-    } catch (err) {
-        console.error("Reject Leave Error:", err);
-        res.status(500).json({
-            statusCode: 500,
-            message: err.message
-        });
-    }
-};
-
-// Get leave history
-export const getLeaveHistory = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
-
-        const leaves = await Leave.find({
-            user: userId,
-            startDate: {
-                $gte: new Date(`${year}-01-01`),
-                $lte: new Date(`${year}-12-31`)
-            }
-        })
-        .populate("status", "name flag")
-        .populate("approvedBy", "name email")
-        .sort({ startDate: -1 });
-
-        const annualLeave = await AnnualLeave.findOne({ user: userId, year });
-
-        if (!annualLeave) {
-            return res.json({
-                statusCode: 200,
-                message: `Leave quota for ${year} has not been set by admin`,
-                data: {
-                    year,
-                    summary: {
-                        totalDays: 0,
-                        usedDays: 0,
-                        remainingDays: 0
-                    },
-                    leaves
-                }
-            });
-        }
-
-        const remainingDays = annualLeave.totalDays - annualLeave.usedDays;
-
-        res.json({
-            statusCode: 200,
-            message: "Leave history retrieved successfully",
-            data: {
-                year,
-                summary: {
-                    totalDays: annualLeave.totalDays,
-                    usedDays: annualLeave.usedDays,
-                    remainingDays: remainingDays < 0 ? 0 : remainingDays
-                },
-                leaves
-            }
-        });
-    } catch (err) {
-        console.error("Get Leave History Error:", err);
-        res.status(500).json({
-            statusCode: 500,
-            message: err.message
-        });
-    }
-};
-
-// List leaves (for admin/manager)
-export const listLeaves = async (req, res) => {
-    try {
-        const { mine, status, year } = req.query;
-        let filter = {};
-
-        // Jika query mine=true, hanya tampilkan cuti user sendiri
-        if (mine === "true") {
-            filter.user = req.user._id;
-        }
-
-        // Filter by status
-        if (status) {
-            const statusDoc = await LeaveStatus.findOne({ name: status });
-            if (statusDoc) {
-                filter.status = statusDoc._id;
-            }
-        }
-
-        // Filter by year
-        if (year) {
-            const yearNum = parseInt(year);
-            filter.startDate = {
-                $gte: new Date(`${yearNum}-01-01`),
-                $lte: new Date(`${yearNum}-12-31`)
-            };
-        }
-
-        const leaves = await Leave.find(filter)
-            .populate("user", "name email position department")
-            .populate("status", "name flag")
-            .populate("approvedBy", "name email")
-            .sort({ createdAt: -1 });
-
-        res.json({
-            statusCode: 200,
-            message: "Leaves retrieved successfully",
-            data: leaves
-        });
-    } catch (err) {
-        console.error("List Leaves Error:", err);
         res.status(500).json({
             statusCode: 500,
             message: err.message
