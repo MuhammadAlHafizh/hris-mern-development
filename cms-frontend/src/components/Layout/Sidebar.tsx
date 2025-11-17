@@ -13,7 +13,8 @@ import {
     UserCog,
     Briefcase,
     ClipboardList,
-    CalendarDays
+    CalendarDays,
+    ClipboardCheck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -85,14 +86,19 @@ const navigation: Navigation = [
                 roles: ['admin', 'manager']
             },
             {
-                name: 'Leave',
+                name: 'Leave Requests', // Untuk admin/manager
+                href: `${ADMIN_BASE}/admin-leave`,
+                icon: ClipboardCheck,
+                roles: ['admin', 'manager']
+            },
+            {
+                name: 'My Leave', // Untuk staff
                 href: `${ADMIN_BASE}/leave`,
-                icon: Calendar,
-                roles: ['admin', 'manager', 'staff']
+                icon: ClipboardList,
+                roles: ['staff']
             },
         ]
     },
-
     {
         name: 'Announcements',
         href: `${ADMIN_BASE}/announcements`,
@@ -140,8 +146,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 location.pathname.startsWith(`${ADMIN_BASE}/users`) ||
                 location.pathname.startsWith(`${ADMIN_BASE}/positions`),
             reports: location.pathname.startsWith(`${ADMIN_BASE}/reports`),
-            'leave management': location.pathname.startsWith(`${ADMIN_BASE}/annual-leave`) ||
-                location.pathname.startsWith(`${ADMIN_BASE}/leave`),
+            'leave management':
+                location.pathname.startsWith(`${ADMIN_BASE}/annual-leave`) ||
+                location.pathname.startsWith(`${ADMIN_BASE}/leave`) ||
+                location.pathname.startsWith(`${ADMIN_BASE}/admin-leave`),
         });
     }, [location.pathname]);
 

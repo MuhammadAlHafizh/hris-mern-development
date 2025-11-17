@@ -121,6 +121,11 @@ export interface AnnualLeave {
     remainingDays: number;
     createdAt: string;
     updatedAt: string;
+    approvedBy: {
+        _id: string;
+        name: string;
+        email: string;
+    },
     __v?: number;
 }
 
@@ -236,4 +241,68 @@ export interface AttendanceListResponse {
     hasPrev: boolean;
 }
 
+export interface LeaveStatus {
+  _id: string;
+  name: 'Pending' | 'Approved' | 'Cancelled' | 'Reverse';
+  flag: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
+export interface Leave {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    position?: string;
+    department?: string;
+  };
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string;
+  status: LeaveStatus;
+  approvedBy?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  managerNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeaveSummary {
+  totalDays: number;
+  usedDays: number;
+  remainingDays: number;
+}
+
+export interface LeaveHistoryResponse {
+  year: number;
+  summary: LeaveSummary;
+  leaves: Leave[];
+}
+
+export interface ApplyLeaveData {
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
+
+export interface LeaveActionData {
+  managerNotes?: string;
+}
+
+export interface LeaveListResponse {
+  statusCode: number;
+  message: string;
+  data: Leave[];
+}
+
+export interface LeaveHistoryResponseData {
+  statusCode: number;
+  message: string;
+  data: LeaveHistoryResponse;
+}

@@ -3,6 +3,7 @@ import { authApi, LoginResponse } from '../services/api';
 
 // Define AuthUser type
 export interface AuthUser {
+    _id: string;
     id: string;
     name: string;
     email: string;
@@ -66,6 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const response: LoginResponse = await authApi.login(email, password);
 
             const authUser: AuthUser = {
+                _id: response.user.id,
                 id: response.user.id,
                 name: response.user.name,
                 email: response.user.email,

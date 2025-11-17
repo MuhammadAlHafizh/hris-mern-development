@@ -8,12 +8,16 @@ import { Users } from './pages/admin/user';
 import { Position } from './pages/admin/position';
 import { AnnualLeave } from './pages/admin/annual-leave';
 import { Announcements } from "./pages/admin/announcements";
-import { Leave } from './pages/Leave';
 import { StaffAttendance } from './pages/staff/attendance';
 import { AdminAttendance } from './pages/admin/attandance';
+import { StaffLeave } from './pages/staff/leave'; // Fixed import - using named import
 import { Reports } from './pages/Reports';
 import { ToastContainer } from 'react-toastify';
+import { AdminLeave } from './pages/admin/leave';
 import 'react-toastify/dist/ReactToastify.css';
+
+// Import leave management page if it exists, otherwise you'll need to create it
+// import { LeaveManagementPage } from './pages/admin/leave-management';
 
 function App() {
     return (
@@ -89,8 +93,16 @@ function App() {
                                 }
                             />
 
-                            {/* Leave untuk semua role */}
-                            <Route path="leave" element={<Leave />} />
+                            {/* Leave untuk semua role - akan diarahkan ke halaman sesuai role */}
+                            <Route
+                                path="leave"
+                                element={<LeavePage />}
+                            />
+
+                            <Route
+                                path="admin-leave"
+                                element={<AdminLeave />}
+                            />
 
                             {/* Reports dengan sub-routes */}
                             <Route
@@ -123,6 +135,23 @@ const AttendancePage = () => {
     } else {
         return <StaffAttendance />;
     }
+};
+
+const LeavePage = () => {
+    // const { user } = useAuth();
+
+    // For now, all roles use StaffLeave since LeaveManagementPage doesn't exist
+    // Once you create LeaveManagementPage, you can uncomment the conditional logic
+    return <StaffLeave />;
+
+    /*
+    // Uncomment this once you have LeaveManagementPage component:
+    if (user?.role === 'admin' || user?.role === 'manager' || user?.role === 'hr') {
+        return <LeaveManagementPage />;
+    } else {
+        return <StaffLeave />;
+    }
+    */
 };
 
 export default App;
