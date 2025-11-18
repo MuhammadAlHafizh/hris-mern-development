@@ -3,22 +3,19 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout/Layout';
 import { Login } from './pages/Login';
-// import { Dashboard } from './pages/Dashboard';
 import { Users } from './pages/admin/user';
 import { Position } from './pages/admin/position';
 import { AnnualLeave } from './pages/admin/annual-leave';
 import { Announcements } from "./pages/admin/announcements";
 import { StaffAttendance } from './pages/staff/attendance';
 import { AdminAttendance } from './pages/admin/attandance';
-import { StaffLeave } from './pages/staff/leave'; // Fixed import - using named import
+import { StaffLeave } from './pages/staff/leave';
 import { Reports } from './pages/Reports';
 import { ToastContainer } from 'react-toastify';
 import { AdminLeave } from './pages/admin/leave';
 import { Dashboard } from './pages/admin/dashboard';
+import { StaffDashboard } from './pages/staff/dashboard';
 import 'react-toastify/dist/ReactToastify.css';
-
-// Import leave management page if it exists, otherwise you'll need to create it
-// import { LeaveManagementPage } from './pages/admin/leave-management';
 
 function App() {
     return (
@@ -144,26 +141,12 @@ const DashboardPage = () => {
     if (user?.role === 'admin' || user?.role === 'manager') {
         return <Dashboard />;
     } else {
-        // You can create a StaffDashboard component for staff users if needed
-        // return <Dashboard />; // Placeholder - replace with StaffDashboard when available
+        return <StaffDashboard />;
     }
 }
 
 const LeavePage = () => {
-    // const { user } = useAuth();
-
-    // For now, all roles use StaffLeave since LeaveManagementPage doesn't exist
-    // Once you create LeaveManagementPage, you can uncomment the conditional logic
     return <StaffLeave />;
-
-    /*
-    // Uncomment this once you have LeaveManagementPage component:
-    if (user?.role === 'admin' || user?.role === 'manager' || user?.role === 'hr') {
-        return <LeaveManagementPage />;
-    } else {
-        return <StaffLeave />;
-    }
-    */
 };
 
 export default App;

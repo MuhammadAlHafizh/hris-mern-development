@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
     Home,
     Users,
-    Megaphone,
+    // Megaphone,
     Calendar,
     FileText,
     ChevronLeft,
