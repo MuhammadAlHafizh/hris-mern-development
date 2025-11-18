@@ -10,7 +10,7 @@ import { Announcements } from "./pages/admin/announcements";
 import { StaffAttendance } from './pages/staff/attendance';
 import { AdminAttendance } from './pages/admin/attandance';
 import { StaffLeave } from './pages/staff/leave';
-import { Reports } from './pages/Reports';
+import { ReportsAttendance } from './pages/admin/report/attendance';
 import { ToastContainer } from 'react-toastify';
 import { AdminLeave } from './pages/admin/leave';
 import { Dashboard } from './pages/admin/dashboard';
@@ -102,12 +102,12 @@ function App() {
                                 element={<AdminLeave />}
                             />
 
-                            {/* Reports dengan sub-routes */}
+                            {/* ReportsAttendance dengan sub-routes */}
                             <Route
-                                path="reports/*"
+                                path="reports/attendance"
                                 element={
                                     <ProtectedRoute>
-                                        <Reports />
+                                        <ReportsAttendance />
                                     </ProtectedRoute>
                                 }
                             />

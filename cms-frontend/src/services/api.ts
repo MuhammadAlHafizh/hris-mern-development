@@ -20,7 +20,7 @@ export interface ApiError {
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_API_BASE_URL || "https://192.168.100.35:4000/api",
+    baseURL: process.env.REACT_APP_API_BASE_URL || "https://10.230.68.195:4000/api",
     timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || "1000"),
     headers: {
         "Content-Type": "application/json",
@@ -61,7 +61,7 @@ api.interceptors.response.use(
                     const response = await axios.post(
                         `${
                             process.env.REACT_APP_API_BASE_URL ||
-                            "https://192.168.100.35:4000/api"
+                            "https://10.230.68.195:4000/api"
                         }/auth/refresh`,
                         { refreshToken }
                     );

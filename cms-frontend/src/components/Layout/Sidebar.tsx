@@ -111,12 +111,6 @@ const navigation: Navigation = [
         roles: ['admin', 'manager'],
         submenu: [
             {
-                name: 'Pengajuan Cuti',
-                href: `${ADMIN_BASE}/reports/leave-requests`,
-                icon: ClipboardList,
-                roles: ['admin', 'manager']
-            },
-            {
                 name: 'Absensi',
                 href: `${ADMIN_BASE}/reports/attendance`,
                 icon: CalendarDays,

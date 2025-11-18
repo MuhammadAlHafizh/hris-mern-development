@@ -82,4 +82,25 @@ export const attendanceService = {
 
         return response.data;
     },
+
+    // TAMBAHKAN FUNCTION INI untuk export report
+    async exportAttendanceReport(filters: {
+        startDate: string;
+        endDate: string;
+        userId?: string;
+    }): Promise<any> {
+        const params: any = {};
+        if (filters.startDate) params.startDate = filters.startDate;
+        if (filters.endDate) params.endDate = filters.endDate;
+        if (filters.userId) params.userId = filters.userId;
+
+        console.log("Export report params:", params);
+
+        const response = await api.get("/attendance/export", {
+            params,
+            responseType: 'blob' // Penting untuk download file Excel
+        });
+
+        return response;
+    }
 };
