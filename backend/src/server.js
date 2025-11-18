@@ -39,8 +39,8 @@ const PORT = process.env.PORT || 4000;
     await connectDB();
 
     const options = {
-      key: fs.readFileSync("./cert/192.168.100.35+2-key.pem"),
-      cert: fs.readFileSync("./cert/192.168.100.35+2.pem"),
+      key: fs.readFileSync("./cert/10.230.68.195+2-key.pem"),
+      cert: fs.readFileSync("./cert/10.230.68.195+2.pem"),
     };
 
     // Buat HTTPS server utama pakai Express
@@ -50,7 +50,7 @@ const PORT = process.env.PORT || 4000;
     initSocket(server);
 
     server.listen(PORT, () => {
-      console.log(`✅ HTTPS Server running at https://192.168.100.35:${PORT}`);
+      console.log(`✅ HTTPS Server running at https://10.230.68.195:${PORT}`);
       console.log(`🔌 Socket.io ready for realtime updates`);
     });
   } catch (error) {

@@ -5,7 +5,8 @@ import {
     getTodayStatus,
     getAttendanceHistory,
     getAllAttendance,
-    sickLeave
+    sickLeave,
+    exportAttendanceReport
 } from "../controllers/attendanceController.js";
 import { auth } from "../middlewares/auth.js";
 import multer from "multer";
@@ -96,5 +97,6 @@ router.post("/sick-leave", upload.single('medical_certificate'), handleMulterErr
 router.get("/today-status", getTodayStatus);
 router.get("/history", getAttendanceHistory);
 router.get("/", getAllAttendance);
+router.get("/export", exportAttendanceReport);
 
 export default router;

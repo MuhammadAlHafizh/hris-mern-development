@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import Attendance from "../models/Attendance/Attendance.js";
 import { logActivity, getIndonesianHolidays } from "../utility/Helper.js";
 import { handleFileUpload } from "../utility/fileUpload.js";
+import ExcelJS from 'exceljs';
+
 
 export const clockIn = async (req, res, next) => {
     try {
@@ -507,3 +509,182 @@ export const getAllAttendance = async (req, res, next) => {
         next(err);
     }
 };
+
+
+export const exportAttendanceReport = async (req, res, next) => {
+    try {
+        const {
+            startDate,
+            endDate,
+            userId
+        } = req.query;
+
+        // Validasi required fields
+        if (!startDate || !endDate) {
+            return res.status(400).json({
+                status: "error",
+                message: "Start date and end date are required"
+            });
+        }
+
+        // Build aggregation pipeline
+        const pipeline = [];
+
+        // Match stage untuk filter dasar
+        const matchStage = {};
+
+        // Filter by user ID
+        if (userId && userId !== "all") {
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid user ID format"
+                });
+            }
+            matchStage.user = new mongoose.Types.ObjectId(userId);
+        }
+
+        // Filter by date range
+        if (startDate && endDate) {
+            matchStage.createdAt = {};
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            matchStage.createdAt.$gte = start;
+
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            matchStage.createdAt.$lte = end;
+        }
+
+        // Add initial match stage
+        if (Object.keys(matchStage).length > 0) {
+            pipeline.push({ $match: matchStage });
+        }
+
+        // Lookup user data
+        pipeline.push({
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user"
+            }
+        });
+
+        // Unwind user array
+        pipeline.push({ $unwind: "$user" });
+
+        // Projection untuk format response yang clean
+        pipeline.push({
+            $project: {
+                type: 1,
+                attendance_type: 1,
+                location: 1,
+                sick_leave: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                "user.name": 1,
+                "user.email": 1,
+                "user.position": 1,
+                "user.department": 1
+            }
+        });
+
+        // Sort by date
+        pipeline.push({ $sort: { createdAt: 1 } });
+
+        console.log('Export pipeline:', JSON.stringify(pipeline, null, 2));
+
+        // Execute aggregation
+        const attendanceData = await Attendance.aggregate(pipeline);
+
+        // Jika tidak ada data
+        if (attendanceData.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "No attendance data found for the selected criteria"
+            });
+        }
+
+        // Create Excel workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Attendance Report');
+
+        // Set column headers
+        worksheet.columns = [
+            { header: 'Date', key: 'date', width: 12 },
+            { header: 'Time', key: 'time', width: 10 },
+            { header: 'Employee Name', key: 'employeeName', width: 20 },
+            { header: 'Employee Email', key: 'employeeEmail', width: 25 },
+            { header: 'Position', key: 'position', width: 15 },
+            { header: 'Department', key: 'department', width: 15 },
+            { header: 'Type', key: 'type', width: 12 },
+            { header: 'Attendance Type', key: 'attendanceType', width: 12 },
+            { header: 'Location', key: 'location', width: 30 },
+            { header: 'Sick Description', key: 'sickDescription', width: 25 },
+            { header: 'Sick Start Date', key: 'sickStartDate', width: 12 },
+            { header: 'Sick End Date', key: 'sickEndDate', width: 12 }
+        ];
+
+        // Style header row
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE6E6FA' }
+        };
+
+        // Add data rows
+        attendanceData.forEach(record => {
+            const row = worksheet.addRow({
+                date: new Date(record.createdAt).toLocaleDateString('id-ID'),
+                time: new Date(record.createdAt).toLocaleTimeString('id-ID'),
+                employeeName: record.user.name,
+                employeeEmail: record.user.email,
+                position: record.user.position || 'N/A',
+                department: record.user.department || 'N/A',
+                type: record.type === 'clock_in' ? 'Clock In' :
+                      record.type === 'clock_out' ? 'Clock Out' :
+                      record.type === 'sick_leave' ? 'Sick Leave' : record.type,
+                attendanceType: record.attendance_type === 'onsite' ? 'Onsite' :
+                              record.attendance_type === 'hybrid' ? 'Hybrid' :
+                              record.attendance_type === 'sick' ? 'Sick' : record.attendance_type,
+                location: record.location ?
+                         `${record.location.address} (${record.location.lat}, ${record.location.lng})` :
+                         'N/A',
+                sickDescription: record.sick_leave?.description || 'N/A',
+                sickStartDate: record.sick_leave?.start_date ?
+                              new Date(record.sick_leave.start_date).toLocaleDateString('id-ID') :
+                              'N/A',
+                sickEndDate: record.sick_leave?.end_date ?
+                            new Date(record.sick_leave.end_date).toLocaleDateString('id-ID') :
+                            'N/A'
+            });
+
+            // Add border to each cell in the row
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        // Set response headers untuk download Excel
+        const fileName = `attendance_report_${startDate}_to_${endDate}.xlsx`;
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+        // Write Excel to response
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (err) {
+        console.error('Error in exportAttendanceReport:', err);
+        next(err);
+    }
+};
+
