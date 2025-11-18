@@ -55,7 +55,6 @@ export const StaffListCard = ({ todayAttendances, isLoading, onRefresh }: StaffL
     const hybridCount = todayRecords.filter(a => a.attendance_type === 'hybrid').length;
     const sickCount = todayRecords.filter(a => a.attendance_type === 'sick').length;
     const totalUsers = new Set(todayRecords.map(a => a.user?._id).filter(Boolean)).size;
-
     return (
         <Card className="rounded-2xl shadow-lg border-0 bg-white h-full">
             <div className="p-4 lg:p-6">

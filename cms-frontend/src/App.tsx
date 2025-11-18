@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout/Layout';
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
+// import { Dashboard } from './pages/Dashboard';
 import { Users } from './pages/admin/user';
 import { Position } from './pages/admin/position';
 import { AnnualLeave } from './pages/admin/annual-leave';
@@ -14,6 +14,7 @@ import { StaffLeave } from './pages/staff/leave'; // Fixed import - using named 
 import { Reports } from './pages/Reports';
 import { ToastContainer } from 'react-toastify';
 import { AdminLeave } from './pages/admin/leave';
+import { Dashboard } from './pages/admin/dashboard';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Import leave management page if it exists, otherwise you'll need to create it
@@ -51,7 +52,7 @@ function App() {
                             }
                         >
                             {/* Route untuk semua role */}
-                            <Route path="dashboard" element={<Dashboard />} />
+                            <Route path="dashboard" element={<DashboardPage />} />
 
                             {/* Attendance - admin/manager ke AdminAttendance, staff ke StaffAttendance */}
                             <Route
@@ -136,6 +137,17 @@ const AttendancePage = () => {
         return <StaffAttendance />;
     }
 };
+
+const DashboardPage = () => {
+    const { user } = useAuth();
+
+    if (user?.role === 'admin' || user?.role === 'manager') {
+        return <Dashboard />;
+    } else {
+        // You can create a StaffDashboard component for staff users if needed
+        // return <Dashboard />; // Placeholder - replace with StaffDashboard when available
+    }
+}
 
 const LeavePage = () => {
     // const { user } = useAuth();

@@ -6,9 +6,9 @@ import {
     CheckCircle,
     TrendingUp
 } from 'lucide-react';
-import { Card } from '../components/UI/Card';
-import { useAdminAttendance } from '../hook/useAdminAttendance';
-import { useAdminLeave } from '../hook/useAdminLeave';
+import { Card } from '../../../components/UI/Card';
+import { useAdminAttendance } from '../../../hook/useAdminAttendance';
+import { useAdminLeave } from '../../../hook/useAdminLeave';
 
 export const Dashboard: React.FC = () => {
     const { todayAttendances, isLoading: attendanceLoading } = useAdminAttendance();

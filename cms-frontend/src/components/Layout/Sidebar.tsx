@@ -99,12 +99,12 @@ const navigation: Navigation = [
             },
         ]
     },
-    {
-        name: 'Announcements',
-        href: `${ADMIN_BASE}/announcements`,
-        icon: Megaphone,
-        roles: ['admin', 'manager']
-    },
+    // {
+    //     name: 'Announcements',
+    //     href: `${ADMIN_BASE}/announcements`,
+    //     icon: Megaphone,
+    //     roles: ['admin', 'manager']
+    // },
     {
         name: 'Reports',
         icon: FileText,
