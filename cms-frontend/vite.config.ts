@@ -8,7 +8,7 @@
 //     //     open: true,
 //     // },
 //     server: {
-//         host: '10.230.68.195',
+//         host: '192.168.100.35',
 //         port: 5173,
 //     },
 //     resolve: {
@@ -25,11 +25,11 @@ import fs from "fs";
 export default defineConfig({
     plugins: [react()],
     server: {
-        host: "10.230.68.195",
+        host: "192.168.100.35",
         port: 5173,
         https: {
-            key: fs.readFileSync("./cert/10.230.68.195+2-key.pem"),
-            cert: fs.readFileSync("./cert/10.230.68.195+2.pem"),
+            key: fs.readFileSync("./cert/192.168.100.35+2-key.pem"),
+            cert: fs.readFileSync("./cert/192.168.100.35+2.pem"),
         },
     },
     resolve: {
