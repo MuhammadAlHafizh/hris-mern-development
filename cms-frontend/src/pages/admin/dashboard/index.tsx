@@ -2,7 +2,6 @@ import React from 'react';
 import {
     Users,
     Calendar,
-    Clock,
     CheckCircle,
     TrendingUp
 } from 'lucide-react';
@@ -19,7 +18,7 @@ export const Dashboard: React.FC = () => {
     const approvedLeaves = leaves.filter(leave => leave.status?.name === 'Approved').length;
 
     // Hitung statistik absensi hari ini
-    const totalEmployees = 124; // Ini bisa dari API users nanti
+    const totalEmployees = 10; // Ini bisa dari API users nanti
 
     // Filter untuk clock_in saja dan hitung yang sudah absen
     const clockInRecords = todayAttendances.filter(att => att.type === 'clock_in');
@@ -91,41 +90,6 @@ export const Dashboard: React.FC = () => {
         }));
 
     // Data absensi terkini dari hook
-    const formattedAttendance = clockInRecords
-        .slice(0, 5) // Ambil 5 data terbaru
-        .map(att => {
-            const checkInTime = att.createdAt ? new Date(att.createdAt) : null;
-
-            // Cari data clock_out untuk user yang sama
-            const clockOutRecord = todayAttendances.find(
-                record => record.user?._id === att.user?._id && record.type === 'clock_out'
-            );
-            const checkOutTime = clockOutRecord?.createdAt ? new Date(clockOutRecord.createdAt) : null;
-
-            let status = 'ontime';
-            if (checkInTime) {
-                const hours = checkInTime.getHours();
-                const minutes = checkInTime.getMinutes();
-                // Tepat waktu jika checkin sebelum jam 9:01
-                status = (hours < 9 || (hours === 9 && minutes <= 0)) ? 'ontime' : 'late';
-            } else {
-                status = 'absent';
-            }
-
-            return {
-                id: att._id,
-                name: att.user?.name || 'Unknown User',
-                checkIn: checkInTime ? checkInTime.toLocaleTimeString('id-ID', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : '-',
-                checkOut: checkOutTime ? checkOutTime.toLocaleTimeString('id-ID', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : '-',
-                status,
-            };
-        });
 
     // Ringkasan cuti bulan ini
     const currentMonth = new Date().getMonth();
@@ -301,56 +265,6 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </Card>
             </div>
-
-            {/* Absensi Hari Ini */}
-            <Card>
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-black">
-                        Absensi Hari Ini
-                    </h3>
-                    <span className="text-sm text-gray-500">
-                        {new Date().toLocaleDateString('id-ID', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        })}
-                    </span>
-                </div>
-                <div className="overflow-x-auto">
-                    {formattedAttendance.length > 0 ? (
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-gray-200">
-                                    <th className="text-left py-3 text-sm font-medium text-gray-500">Nama</th>
-                                    <th className="text-left py-3 text-sm font-medium text-gray-500">Check In</th>
-                                    <th className="text-left py-3 text-sm font-medium text-gray-500">Check Out</th>
-                                    <th className="text-left py-3 text-sm font-medium text-gray-500">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {formattedAttendance.map((attendance) => (
-                                    <tr key={attendance.id} className="border-b border-gray-100">
-                                        <td className="py-3 text-sm text-black">{attendance.name}</td>
-                                        <td className="py-3 text-sm text-gray-500">{attendance.checkIn}</td>
-                                        <td className="py-3 text-sm text-gray-500">{attendance.checkOut}</td>
-                                        <td className="py-3">
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[attendance.status]}`}>
-                                                {getStatusText(attendance.status)}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            <Clock className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                            <p>Belum ada data absensi hari ini</p>
-                        </div>
-                    )}
-                </div>
-            </Card>
         </div>
     );
 };

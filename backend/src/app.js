@@ -31,7 +31,6 @@
 
 // export default app;
 
-
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -40,10 +39,12 @@ import router from "./routes/index.js";
 
 const app = express();
 
+// Ganti origin ke frontend localhost
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://192.168.100.35:5173",
-  credentials: true
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true // penting supaya cookie / auth header bisa dipakai
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));

@@ -137,7 +137,24 @@ export const AdminLeave: React.FC = () => {
                     </TableHeader>
                     <TableBody>
                         {leaves.map((leave) => {
-                            const availableActions = getAvailableActions(leave);
+                            let availableActions = getAvailableActions(leave);
+
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+
+                            const endDate = new Date(leave.endDate);
+                            endDate.setHours(0, 0, 0, 0);
+
+                            // Jika status Pending atau Approved dan tanggal cuti sudah lewat, jangan tampilkan action
+                            if ((leave.status?.name === 'Pending' || leave.status?.name === 'Approved') && endDate < today) {
+                                availableActions = [];
+                            }
+
+                            // Filter action sesuai aturan
+                            availableActions = availableActions
+                                .filter(action => !(leave.status?.name === 'Approved' && action.type === 'reverse'))
+                                .filter(action => !(leave.status?.name === 'Approved' && action.type === 'cancel'));
+
 
                             return (
                                 <TableRow key={leave._id}>
@@ -259,19 +276,19 @@ export const AdminLeave: React.FC = () => {
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Nama Staff
                                 </label>
                                 <p className="text-gray-900">{selectedLeave.user?.name}</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Email
                                 </label>
                                 <p className="text-gray-900">{selectedLeave.user?.email}</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Periode
                                 </label>
                                 <p className="text-gray-900">
@@ -279,13 +296,13 @@ export const AdminLeave: React.FC = () => {
                                 </p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Durasi
                                 </label>
                                 <p className="text-gray-900">{selectedLeave.days} hari</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Status
                                 </label>
                                 <span
@@ -297,21 +314,21 @@ export const AdminLeave: React.FC = () => {
                                 </span>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Tanggal Pengajuan
                                 </label>
                                 <p className="text-gray-900">{formatDate(selectedLeave.createdAt)}</p>
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                            <label className="block text-sm font-medium text-black mb-1">
                                 Alasan Cuti
                             </label>
                             <p className="text-gray-900 whitespace-pre-wrap">{selectedLeave.reason}</p>
                         </div>
                         {selectedLeave.managerNotes && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Catatan Manager
                                 </label>
                                 <p className="text-gray-900 whitespace-pre-wrap">{selectedLeave.managerNotes}</p>
@@ -319,7 +336,7 @@ export const AdminLeave: React.FC = () => {
                         )}
                         {selectedLeave.approvedBy && (
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 text-black mb-1">
+                                <label className="block text-sm font-medium text-black mb-1">
                                     Disetujui Oleh
                                 </label>
                                 <p className="text-gray-900">{selectedLeave.approvedBy.name}</p>
@@ -363,7 +380,7 @@ export const AdminLeave: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 text-black mb-2">
+                            <label className="block text-sm font-medium text-black mb-2">
                                 Catatan (Opsional)
                             </label>
                             <textarea

@@ -15,10 +15,6 @@ export const StaffDashboard: React.FC = () => {
     const {
         todayStatus,
         isLoading: attendanceLoading,
-        locationError,
-        handleClockIn,
-        handleClockOut,
-        handleSickLeave,
         refreshAllData
     } = useAttendance();
 
@@ -37,9 +33,7 @@ export const StaffDashboard: React.FC = () => {
 
     // Check if user has clocked in today - perbaikan tipe data
     const hasClockedIn = todayStatus?.clockIn?.time;
-    const hasClockedOut = todayStatus?.clockOut?.time;
     const clockInTime = todayStatus?.clockIn?.time;
-    const clockOutTime = todayStatus?.clockOut?.time;
 
     const stats = [
         {
@@ -120,31 +114,7 @@ export const StaffDashboard: React.FC = () => {
         return statusMap[status] || status;
     };
 
-    const canTakeAttendance = () => {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        return !isWeekend;
-    };
-
     // Handler untuk tombol absen
-    const handleClockInClick = () => {
-        handleClockIn(); // Default tanpa parameter atau sesuaikan dengan kebutuhan
-    };
-
-    const handleClockOutClick = () => {
-        handleClockOut(); // Default tanpa parameter
-    };
-
-    const handleSickLeaveClick = () => {
-        // Untuk demo, kita buat data sakit sederhana
-        const sickData = {
-            description: 'Sakit hari ini',
-            start_date: new Date().toISOString().split('T')[0]
-        };
-        handleSickLeave(sickData);
-    };
-
     if (attendanceLoading || leaveLoading) {
         return (
             <div className="flex items-center justify-center min-h-96">
@@ -225,7 +195,7 @@ export const StaffDashboard: React.FC = () => {
                         </span>
                     </div>
 
-                    <div className="space-y-4">
+                    {/* <div className="space-y-4">
                         {hasClockedIn ? (
                             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                                 <div className="flex items-center justify-between">
@@ -317,7 +287,7 @@ export const StaffDashboard: React.FC = () => {
                                 )}
                             </div>
                         )}
-                    </div>
+                    </div> */}
                 </Card>
 
                 {/* Pengajuan Cuti Terbaru */}

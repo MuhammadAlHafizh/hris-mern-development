@@ -20,8 +20,8 @@ export interface ApiError {
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_API_BASE_URL || "https://192.168.100.35:4000/api",
-    timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || "1000"),
+    baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:4000/api",
+    timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || "5000"),
     headers: {
         "Content-Type": "application/json",
     },
@@ -36,9 +36,7 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 // Add response interceptor for error handling and token refresh
@@ -59,10 +57,7 @@ api.interceptors.response.use(
                 if (refreshToken) {
                     // Try to refresh token
                     const response = await axios.post(
-                        `${
-                            process.env.REACT_APP_API_BASE_URL ||
-                            "https://192.168.100.35:4000/api"
-                        }/auth/refresh`,
+                        `${process.env.REACT_APP_API_BASE_URL || "http://localhost:4000/api"}/auth/refresh`,
                         { refreshToken }
                     );
 
@@ -90,6 +85,7 @@ api.interceptors.response.use(
             localStorage.removeItem("user_data");
             window.location.href = "/login";
         }
+
         return Promise.reject(error);
     }
 );
@@ -100,18 +96,13 @@ export const authApi = {
         try {
             const response: AxiosResponse<LoginResponse> = await api.post(
                 "/auth/login",
-                {
-                    email,
-                    password,
-                }
+                { email, password }
             );
             console.log("Login successful:", response.data);
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
-            throw new Error(
-                axiosError.response?.data?.message || "Login failed"
-            );
+            throw new Error(axiosError.response?.data?.message || "Login failed");
         }
     },
 

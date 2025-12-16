@@ -26,8 +26,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import https from "https";
-import fs from "fs";
+import http from "http"; // ganti dari https ke http
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { initSocket } from "./socket.js";
@@ -38,19 +37,14 @@ const PORT = process.env.PORT || 4000;
   try {
     await connectDB();
 
-    const options = {
-      key: fs.readFileSync("./cert/192.168.100.35+2-key.pem"),
-      cert: fs.readFileSync("./cert/192.168.100.35+2.pem"),
-    };
+    // Buat HTTP server utama pakai Express
+    const server = http.createServer(app);
 
-    // Buat HTTPS server utama pakai Express
-    const server = https.createServer(options, app);
-
-    // Inisialisasi socket.io di server HTTPS
+    // Inisialisasi socket.io di server HTTP
     initSocket(server);
 
     server.listen(PORT, () => {
-      console.log(`✅ HTTPS Server running at https://192.168.100.35:${PORT}`);
+      console.log(`✅ Server running at http://localhost:${PORT}`);
       console.log(`🔌 Socket.io ready for realtime updates`);
     });
   } catch (error) {
@@ -58,3 +52,4 @@ const PORT = process.env.PORT || 4000;
     process.exit(1);
   }
 })();
+
