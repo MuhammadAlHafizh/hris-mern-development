@@ -7,7 +7,7 @@ import {
     Calendar,
     FileText,
     ChevronLeft,
-    Building2,
+    // Building2,
     ChevronDown,
     ChevronRight,
     UserCog,
@@ -17,6 +17,7 @@ import {
     ClipboardCheck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../assets/logo.jpeg';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -172,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             >
                 <div className="flex items-center justify-between h-16 px-6 border-b">
                     <div className="flex items-center space-x-3">
-                        <Building2 className="h-8 w-8 text-blue-600" />
+                        <img src={logo} alt="Logo" className="h-10 w-10 object-contain rounded-lg" />
                         <div>
                             <span className="text-xl font-bold text-black">CMS Admin</span>
                             <div className="text-xs text-gray-500 capitalize">{user?.role}</div>

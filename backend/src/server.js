@@ -1,27 +1,3 @@
-// import dotenv from "dotenv";
-// dotenv.config();
-
-// import { initSocket } from "./socket.js";
-// import connectDB from "./config/db.js";
-
-// const PORT = process.env.PORT || 4000;
-
-// (async () => {
-//   try {
-//     await connectDB();
-
-//     // Initialize socket.io dan dapatkan server
-//     const { server } = initSocket();
-
-//     server.listen(PORT, () => {
-//       console.log(`🚀 Server running on http://localhost:${PORT}`);
-//       console.log(`🔌 Socket.io ready for realtime updates`);
-//     });
-//   } catch (error) {
-//     console.error("❌ Failed to start server:", error);
-//     process.exit(1);
-//   }
-// })();
 
 import dotenv from "dotenv";
 dotenv.config();

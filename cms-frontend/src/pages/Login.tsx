@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/UI/Button';
+import logo from '../assets/logo.jpeg';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -42,7 +43,7 @@ export const Login: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
                 <div className="text-center">
-                    <Building2 className="mx-auto h-12 w-12 text-blue-600" />
+                    <img src={logo} alt="Logo" className="mx-auto h-20 w-20 object-contain rounded-xl" />
                     <h2 className="mt-6 text-3xl font-extrabold text-black">
                         Sign in to CMS
                     </h2>

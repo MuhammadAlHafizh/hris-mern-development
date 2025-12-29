@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
-import process from "process";
+// import process from "process";
 
 // Define your API response types
 export interface LoginResponse {
@@ -20,8 +20,8 @@ export interface ApiError {
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_API_BASE_URL || "http://192.168.1.3:4000/api",
-    timeout: parseInt(process.env.REACT_APP_API_TIMEOUT || "5000"),
+    baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api",
+    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || "5000"),
     headers: {
         "Content-Type": "application/json",
     },
@@ -57,7 +57,7 @@ api.interceptors.response.use(
                 if (refreshToken) {
                     // Try to refresh token
                     const response = await axios.post(
-                        `${process.env.REACT_APP_API_BASE_URL || "http://192.168.1.3:4000/api"}/auth/refresh`,
+                        `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/refresh`,
                         { refreshToken }
                     );
 

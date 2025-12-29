@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Attendance from "../models/Attendance/Attendance.js";
-import { logActivity, getIndonesianHolidays } from "../utility/Helper.js";
-import { handleFileUpload } from "../utility/fileUpload.js";
+import { logActivity, getIndonesianHolidays, calculateDistance } from "../utility/Helper.js";
 import ExcelJS from 'exceljs';
 
 
@@ -19,6 +18,27 @@ export const clockIn = async (req, res, next) => {
                     status: "error",
                     message: "Location data is required"
                 });
+            }
+
+            // Validasi Geofencing untuk Onsite
+            const isGeofencingEnabled = process.env.ENABLE_GEOFENCING === 'true';
+
+            if (attendance_type === 'onsite' && isGeofencingEnabled) {
+                const officeLat = parseFloat(process.env.OFFICE_LATITUDE);
+                const officeLng = parseFloat(process.env.OFFICE_LONGITUDE);
+                const maxRadius = parseFloat(process.env.MAX_ATTENDANCE_RADIUS_METERS || 300);
+
+                if (officeLat && officeLng) {
+                    const distance = calculateDistance(lat, lng, officeLat, officeLng);
+                    console.log(`Distance to office: ${distance} meters`);
+
+                    if (distance > maxRadius) {
+                        return res.status(400).json({
+                            status: "error",
+                            message: `Anda berada di luar radius kantor (${Math.round(distance)}m). Maksimal ${maxRadius}m.`
+                        });
+                    }
+                }
             }
         }
 
@@ -100,6 +120,27 @@ export const clockOut = async (req, res, next) => {
                 status: "error",
                 message: "Tidak perlu clock out untuk izin sakit"
             });
+        }
+
+        // Validasi Geofencing untuk Onsite saat Clock Out
+        const isGeofencingEnabled = process.env.ENABLE_GEOFENCING === 'true';
+
+        if (clockInRecord.attendance_type === 'onsite' && isGeofencingEnabled) {
+            const officeLat = parseFloat(process.env.OFFICE_LATITUDE);
+            const officeLng = parseFloat(process.env.OFFICE_LONGITUDE);
+            const maxRadius = parseFloat(process.env.MAX_ATTENDANCE_RADIUS_METERS || 300);
+
+            if (officeLat && officeLng) {
+                const distance = calculateDistance(lat, lng, officeLat, officeLng);
+                console.log(`ClockOut Distance to office: ${distance} meters`);
+
+                if (distance > maxRadius) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: `Anda berada di luar radius kantor (${Math.round(distance)}m). Maksimal ${maxRadius}m.`
+                    });
+                }
+            }
         }
 
         const existingClockOut = await Attendance.findOne({
@@ -644,21 +685,21 @@ export const exportAttendanceReport = async (req, res, next) => {
                 position: record.user.position || 'N/A',
                 department: record.user.department || 'N/A',
                 type: record.type === 'clock_in' ? 'Clock In' :
-                      record.type === 'clock_out' ? 'Clock Out' :
-                      record.type === 'sick_leave' ? 'Sick Leave' : record.type,
+                    record.type === 'clock_out' ? 'Clock Out' :
+                        record.type === 'sick_leave' ? 'Sick Leave' : record.type,
                 attendanceType: record.attendance_type === 'onsite' ? 'Onsite' :
-                              record.attendance_type === 'hybrid' ? 'Hybrid' :
-                              record.attendance_type === 'sick' ? 'Sick' : record.attendance_type,
+                    record.attendance_type === 'hybrid' ? 'Hybrid' :
+                        record.attendance_type === 'sick' ? 'Sick' : record.attendance_type,
                 location: record.location ?
-                         `${record.location.address} (${record.location.lat}, ${record.location.lng})` :
-                         'N/A',
+                    `${record.location.address} (${record.location.lat}, ${record.location.lng})` :
+                    'N/A',
                 sickDescription: record.sick_leave?.description || 'N/A',
                 sickStartDate: record.sick_leave?.start_date ?
-                              new Date(record.sick_leave.start_date).toLocaleDateString('id-ID') :
-                              'N/A',
+                    new Date(record.sick_leave.start_date).toLocaleDateString('id-ID') :
+                    'N/A',
                 sickEndDate: record.sick_leave?.end_date ?
-                            new Date(record.sick_leave.end_date).toLocaleDateString('id-ID') :
-                            'N/A'
+                    new Date(record.sick_leave.end_date).toLocaleDateString('id-ID') :
+                    'N/A'
             });
 
             // Add border to each cell in the row
