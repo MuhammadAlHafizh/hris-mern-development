@@ -20,8 +20,8 @@ export interface ApiError {
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api",
-    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || "5000"),
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT),
     headers: {
         "Content-Type": "application/json",
     },
@@ -57,7 +57,7 @@ api.interceptors.response.use(
                 if (refreshToken) {
                     // Try to refresh token
                     const response = await axios.post(
-                        `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/refresh`,
+                        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
                         { refreshToken }
                     );
 
