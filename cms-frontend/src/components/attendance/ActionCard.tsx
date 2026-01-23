@@ -74,27 +74,25 @@ export const ActionCard = ({
                     </div>
 
                     {/* Clock In Options */}
-                    {canClockIn && !isTodayHoliday && !isTodayWeekend && (
+                    {canClockIn && !isTodayHoliday && (
                         <div className="space-y-4 mb-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => setClockInType("onsite")}
-                                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                                        clockInType === "onsite"
+                                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${clockInType === "onsite"
                                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                                         : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                                    }`}
+                                        }`}
                                 >
                                     <Building2 className="h-6 w-6 mx-auto mb-2" />
                                     <span className="text-sm font-medium">Onsite</span>
                                 </button>
                                 <button
                                     onClick={() => setClockInType("hybrid")}
-                                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                                        clockInType === "hybrid"
+                                    className={`p-3 rounded-xl border-2 transition-all duration-200 ${clockInType === "hybrid"
                                         ? 'border-purple-500 bg-purple-50 text-purple-700'
                                         : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                                    }`}
+                                        }`}
                                 >
                                     <Home className="h-6 w-6 mx-auto mb-2" />
                                     <span className="text-sm font-medium">Hybrid</span>
@@ -104,11 +102,10 @@ export const ActionCard = ({
                             <Button
                                 onClick={handleClockIn}
                                 disabled={isLoading}
-                                className={`w-full py-3 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 transform hover:scale-105 ${
-                                    clockInType === "onsite"
+                                className={`w-full py-3 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 transform hover:scale-105 ${clockInType === "onsite"
                                     ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                                     : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
-                                } text-white`}
+                                    } text-white`}
                             >
                                 {isLoading ? (
                                     <>
@@ -225,7 +222,7 @@ export const ActionCard = ({
                     )}
 
                     {/* Holiday/Weekend Message */}
-                    {(isTodayHoliday || isTodayWeekend) && (
+                    {/* {(isTodayHoliday || isTodayWeekend) && (
                         <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                             <Calendar className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                             <p className="text-yellow-800 font-medium">
@@ -235,7 +232,7 @@ export const ActionCard = ({
                                 Tidak perlu melakukan absensi hari ini
                             </p>
                         </div>
-                    )}
+                    )} */}
 
                     {/* Location Info */}
                     {locationError && (
