@@ -5,24 +5,30 @@ import {
     CheckCircle,
     TrendingUp
 } from 'lucide-react';
+
 import { Card } from '../../../components/UI/Card';
 import { useAdminAttendance } from '../../../hook/useAdminAttendance';
 import { useAdminLeave } from '../../../hook/useAdminLeave';
+import { useUserCount } from '../../../hook/useUserCount';
 
 export const Dashboard: React.FC = () => {
     const { todayAttendances, isLoading: attendanceLoading } = useAdminAttendance();
     const { leaves, loading: leaveLoading } = useAdminLeave();
 
-    // Hitung statistik dari data real
+    // ✅ total karyawan dari API /users
+    const { totalUsers, loadingUsers } = useUserCount();
+
+    // Hitung statistik cuti
     const pendingLeaves = leaves.filter(leave => leave.status?.name === 'Pending').length;
     const approvedLeaves = leaves.filter(leave => leave.status?.name === 'Approved').length;
 
-    // Hitung statistik absensi hari ini
-    const totalEmployees = 10; // Ini bisa dari API users nanti
+    // ✅ total karyawan real dari backend
+    const totalEmployees = totalUsers;
 
-    // Filter untuk clock_in saja dan hitung yang sudah absen
+    // Absensi hari ini: hanya clock_in dianggap hadir
     const clockInRecords = todayAttendances.filter(att => att.type === 'clock_in');
     const presentToday = clockInRecords.length;
+
     const attendancePercentage = totalEmployees > 0
         ? Math.round((presentToday / totalEmployees) * 100)
         : 0;
@@ -32,7 +38,7 @@ export const Dashboard: React.FC = () => {
             const checkInTime = new Date(att.createdAt);
             const hours = checkInTime.getHours();
             const minutes = checkInTime.getMinutes();
-            // Anggap terlambat jika checkin setelah jam 9:00
+            // terlambat kalau lewat 09:00
             return hours > 9 || (hours === 9 && minutes > 0);
         }
         return false;
@@ -86,10 +92,8 @@ export const Dashboard: React.FC = () => {
             date: `${new Date(leave.startDate).toLocaleDateString('id-ID')} - ${new Date(leave.endDate).toLocaleDateString('id-ID')}`,
             days: leave.days,
             type: 'Tahunan',
-            status: leave.status?.name.toLowerCase() || 'pending',
+            status: leave.status?.name?.toLowerCase() || 'pending',
         }));
-
-    // Data absensi terkini dari hook
 
     // Ringkasan cuti bulan ini
     const currentMonth = new Date().getMonth();
@@ -100,7 +104,6 @@ export const Dashboard: React.FC = () => {
         return leaveDate.getMonth() === currentMonth && leaveDate.getFullYear() === currentYear;
     });
 
-    // Filter status yang valid untuk leave
     const monthlyLeaveSummary = {
         total: monthlyLeaves.length,
         approved: monthlyLeaves.filter(leave => leave.status?.name === 'Approved').length,
@@ -143,7 +146,7 @@ export const Dashboard: React.FC = () => {
         return statusMap[status] || status;
     };
 
-    if (attendanceLoading || leaveLoading) {
+    if (attendanceLoading || leaveLoading || loadingUsers) {
         return (
             <div className="flex items-center justify-center min-h-96">
                 <div className="text-center">
@@ -185,10 +188,10 @@ export const Dashboard: React.FC = () => {
                                 </p>
                             </div>
                         </div>
+
                         <div className="mt-4">
-                            <span className={`text-sm font-medium ${
-                                stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                            }`}>
+                            <span className={`text-sm font-medium ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+                                }`}>
                                 {stat.change}
                             </span>
                             <span className="text-sm text-gray-500 ml-1">
@@ -210,10 +213,14 @@ export const Dashboard: React.FC = () => {
                             Lihat Semua →
                         </button>
                     </div>
+
                     <div className="space-y-4">
                         {recentLeaves.length > 0 ? (
                             recentLeaves.map((leave) => (
-                                <div key={leave.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <div
+                                    key={leave.id}
+                                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                                >
                                     <div className="flex items-center space-x-3">
                                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                                             <Calendar className="h-5 w-5 text-gray-600" />
@@ -224,6 +231,7 @@ export const Dashboard: React.FC = () => {
                                             </p>
                                         </div>
                                     </div>
+
                                     <div className="flex items-center space-x-2">
                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[leave.status]}`}>
                                             {getStatusText(leave.status)}
@@ -245,6 +253,7 @@ export const Dashboard: React.FC = () => {
                     <h3 className="text-lg font-medium text-black mb-4">
                         Ringkasan Cuti - {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
                     </h3>
+
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Total Pengajuan</span>

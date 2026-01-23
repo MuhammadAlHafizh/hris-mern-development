@@ -30,6 +30,7 @@ export const CalendarCard = ({
     onActiveStartDateChange,
     getAttendanceData
 }: CalendarCardProps) => {
+
     const tileContent: CalendarProps['tileContent'] = ({ date, view }) => {
         if (view !== 'month') return null;
         const attendanceData = getAttendanceData(date);
@@ -41,7 +42,10 @@ export const CalendarCard = ({
         if (attendanceData.status === 'holiday') {
             statusColor = 'bg-red-500';
             statusText = 'Libur';
-        } else if (attendanceData.status === 'weekend' && date.getDay() === 0) {
+        } else if (attendanceData.status === 'sick') {
+            statusColor = 'bg-yellow-500'; // ✅ sick = kuning
+            statusText = 'Sakit';
+        } else if (attendanceData.status === 'weekend') {
             statusColor = 'bg-red-400';
             statusText = 'Weekend';
         } else if (attendanceData.status === 'present') {
@@ -62,19 +66,24 @@ export const CalendarCard = ({
     const tileClassName: CalendarProps['tileClassName'] = ({ date, view }) => {
         if (view !== 'month') return '';
         const attendanceData = getAttendanceData(date);
+
         const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
         const isToday = date.toDateString() === today.toDateString();
 
-        let className = 'relative cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md text-sm md:text-base';
+        let className =
+            'relative cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md text-sm md:text-base';
+
         if (isToday) className += ' bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 shadow-lg';
 
         if (attendanceData) {
             if (attendanceData.status === 'holiday') {
                 className += ' text-red-600 font-semibold bg-red-50';
-            } else if (attendanceData.status === 'weekend' && date.getDay() === 0) {
+            } else if (attendanceData.status === 'weekend') {
                 className += ' text-red-600 font-semibold bg-red-50';
             } else if (attendanceData.status === 'present') {
                 className += ' text-green-600 bg-green-50';
+            } else if (attendanceData.status === 'sick') {
+                className += ' text-yellow-800 font-semibold bg-yellow-100'; // ✅ sick = kuning
             }
         }
 
@@ -118,21 +127,25 @@ export const CalendarCard = ({
                 </div>
 
                 <div className="text-center mt-6 mb-4">
-                    <p className="text-sm text-gray-500 font-medium">
-                        💡 Klik pada tanggal untuk melihat detail absensi
-                    </p>
+                    <p className="text-sm text-gray-500 font-medium">💡 Klik pada tanggal untuk melihat detail absensi</p>
                 </div>
 
-                {/* Legend */}
                 <div className="flex flex-wrap gap-4 justify-center">
                     <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200">
                         <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm"></div>
                         <span className="text-sm font-medium text-gray-700">Hadir</span>
                     </div>
+
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200">
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full shadow-sm"></div>
+                        <span className="text-sm font-medium text-gray-700">Sakit</span>
+                    </div>
+
                     <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200">
                         <div className="w-3 h-3 bg-gray-300 rounded-full shadow-sm"></div>
                         <span className="text-sm font-medium text-gray-700">Absen</span>
                     </div>
+
                     <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-200">
                         <div className="w-3 h-3 border-2 border-blue-500 bg-blue-50 rounded-full shadow-sm"></div>
                         <span className="text-sm font-medium text-gray-700">Hari Ini</span>

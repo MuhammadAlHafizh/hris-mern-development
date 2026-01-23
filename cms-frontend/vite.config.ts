@@ -3,17 +3,18 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
     plugins: [react()],
-    // server: {
-    //     port: 3000,
-    //     open: true,
-    // },
     server: {
-        host: '192.168.1.10',
+        host: "localhost",
         port: 5173,
-    },
-    resolve: {
-        alias: {
-            // Add aliases if needed
+        proxy: {
+            "/uploads": {
+                target: "http://localhost:4000", // GANTI sesuai port backend kamu
+                changeOrigin: true,
+            },
+            "/api": {
+                target: "http://localhost:4000", // kalau API kamu juga dari backend
+                changeOrigin: true,
+            },
         },
     },
 });

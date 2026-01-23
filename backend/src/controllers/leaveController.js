@@ -249,50 +249,44 @@ export const getLeaveHistory = async (req, res) => {
     try {
         const { year, userId } = req.query;
 
-        // Gunakan userId dari query jika ada, jika tidak gunakan dari token
         const currentUserId = userId || req.user._id;
         const currentYear = year ? parseInt(year) : new Date().getFullYear();
-
-        console.log("Getting leave history for user:", currentUserId, "Year:", currentYear);
 
         const startDate = new Date(currentYear, 0, 1);
         const endDate = new Date(currentYear + 1, 0, 1);
 
-        // Get annual leave allocation
         const annualLeave = await AnnualLeave.findOne({
             user: currentUserId,
             year: currentYear
         });
 
-        // Get approved leaves for the year
+        // Ambil approved status
         const approvedStatus = await LeaveStatus.findOne({ name: "Approved" });
+
+        // Ambil approved leaves tahun itu (kalau mau tetap kasih detail leaves)
         const leaves = await Leave.find({
             user: currentUserId,
             startDate: { $gte: startDate, $lt: endDate },
             status: approvedStatus ? approvedStatus._id : null
         });
 
-        // Calculate used days
         const usedDays = leaves.reduce((total, leave) => total + leave.days, 0);
 
-        const totalDays = annualLeave ? annualLeave.totalDays : 12; // Default 12 hari jika tidak ada allocation
-        const remainingDays = Math.max(0, totalDays - usedDays);
-
-        const summary = {
-            totalDays,
-            usedDays,
-            remainingDays
-        };
-
-        console.log(`Leave history summary for user ${currentUserId}:`, summary);
+        const totalDays = annualLeave ? annualLeave.totalDays : 0;
+        const remainingDays = annualLeave ? Math.max(0, totalDays - usedDays) : 0;
 
         res.json({
             statusCode: 200,
             message: "Successfully retrieved leave history",
             data: {
                 year: currentYear,
-                summary,
-                leaves
+                quotaSet: !!annualLeave, // opsional, tapi enak buat UI
+                summary: {
+                    totalDays,
+                    usedDays: annualLeave ? usedDays : 0, // kalau kuota belum ada, anggap 0
+                    remainingDays
+                },
+                leaves: annualLeave ? leaves : [] // kalau kuota belum ada, kamu bisa kosongkan
             }
         });
     } catch (err) {
@@ -303,6 +297,7 @@ export const getLeaveHistory = async (req, res) => {
         });
     }
 };
+
 
 // List leaves (for admin/manager)
 export const listLeaves = async (req, res) => {

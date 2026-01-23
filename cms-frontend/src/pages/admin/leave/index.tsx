@@ -1,10 +1,10 @@
-import React from 'react';
-import { Card } from '../../../components/UI/Card';
-import { Button } from '../../../components/UI/Button';
-import { Search, Filter, Calendar, Check, X, Undo, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHeadCell, TableCell } from '../../../components/UI/Table';
-import { Modal } from '../../../components/UI/Modal';
-import { useAdminLeave } from '../../../hook/useAdminLeave';
+import React from "react";
+import { Card } from "../../../components/UI/Card";
+import { Button } from "../../../components/UI/Button";
+import { Search, Filter, Calendar, Check, X, Undo, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Table, TableHeader, TableBody, TableRow, TableHeadCell, TableCell } from "../../../components/UI/Table";
+import { Modal } from "../../../components/UI/Modal";
+import { useAdminLeave } from "../../../hook/useAdminLeave";
 
 export const AdminLeave: React.FC = () => {
     const {
@@ -35,23 +35,28 @@ export const AdminLeave: React.FC = () => {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Approved': return 'bg-green-100 text-green-800';
-            case 'Pending': return 'bg-yellow-100 text-yellow-800';
-            case 'Cancelled': return 'bg-red-100 text-red-800';
-            case 'Reverse': return 'bg-blue-100 text-blue-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case "Approved":
+                return "bg-green-100 text-green-800";
+            case "Pending":
+                return "bg-yellow-100 text-yellow-800";
+            case "Cancelled":
+                return "bg-red-100 text-red-800";
+            case "Reverse":
+                return "bg-blue-100 text-blue-800";
+            default:
+                return "bg-gray-100 text-gray-800";
         }
     };
 
     const formatDate = (dateString: string) => {
         try {
-            return new Date(dateString).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
+            return new Date(dateString).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
             });
-        } catch (error) {
-            return 'Invalid Date';
+        } catch {
+            return "Invalid Date";
         }
     };
 
@@ -117,15 +122,13 @@ export const AdminLeave: React.FC = () => {
                         </select>
                     </div>
 
-                    <Button type="submit">
-                        Terapkan Filter
-                    </Button>
+                    <Button type="submit">Terapkan Filter</Button>
                 </form>
 
                 {/* Table */}
                 <Table>
                     <TableHeader>
-                        <TableRow key={'header'}>
+                        <TableRow key={"header"}>
                             <TableHeadCell>Staff</TableHeadCell>
                             <TableHeadCell>Periode</TableHeadCell>
                             <TableHeadCell>Durasi</TableHeadCell>
@@ -135,6 +138,7 @@ export const AdminLeave: React.FC = () => {
                             <TableHeadCell>Aksi</TableHeadCell>
                         </TableRow>
                     </TableHeader>
+
                     <TableBody>
                         {leaves.map((leave) => {
                             let availableActions = getAvailableActions(leave);
@@ -145,51 +149,52 @@ export const AdminLeave: React.FC = () => {
                             const endDate = new Date(leave.endDate);
                             endDate.setHours(0, 0, 0, 0);
 
-                            // Jika status Pending atau Approved dan tanggal cuti sudah lewat, jangan tampilkan action
-                            if ((leave.status?.name === 'Pending' || leave.status?.name === 'Approved') && endDate < today) {
+                            // Jika status Pending/Approved dan tanggal cuti sudah lewat, jangan tampilkan action
+                            if ((leave.status?.name === "Pending" || leave.status?.name === "Approved") && endDate < today) {
                                 availableActions = [];
                             }
 
-                            // Filter action sesuai aturan
-                            availableActions = availableActions
-                                .filter(action => !(leave.status?.name === 'Approved' && action.type === 'reverse'))
-                                .filter(action => !(leave.status?.name === 'Approved' && action.type === 'cancel'));
-
+                            // ✅ PENTING: jangan filter cancel/reverse untuk Approved di sini
+                            // (hapus filter yang lama)
 
                             return (
                                 <TableRow key={leave._id}>
                                     <TableCell>
                                         <div className="font-medium">{leave.user?.name}</div>
                                         <div className="text-sm text-gray-500">{leave.user?.email}</div>
-                                        {leave.user?.position && (
-                                            <div className="text-sm text-gray-500">{leave.user.position}</div>
-                                        )}
+                                        {leave.user?.position && <div className="text-sm text-gray-500">{leave.user.position}</div>}
                                     </TableCell>
+
                                     <TableCell>
                                         <div className="font-medium">{formatDate(leave.startDate)}</div>
                                         <div className="text-sm text-gray-500">sampai</div>
                                         <div className="font-medium">{formatDate(leave.endDate)}</div>
                                     </TableCell>
+
                                     <TableCell>
                                         <span className="font-medium text-gray-900">{leave.days} hari</span>
                                     </TableCell>
+
                                     <TableCell>
                                         <div className="max-w-xs">
                                             <p className="text-gray-900 line-clamp-2">{leave.reason}</p>
                                         </div>
                                     </TableCell>
+
                                     <TableCell>
                                         <span
                                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                                leave.status?.name || 'Unknown'
+                                                leave.status?.name || "Unknown"
                                             )}`}
                                         >
-                                            {leave.status?.name || 'Unknown'}
+                                            {leave.status?.name || "Unknown"}
                                         </span>
                                     </TableCell>
+
                                     <TableCell>
                                         <span className="text-gray-900">{formatDate(leave.createdAt)}</span>
                                     </TableCell>
+
                                     <TableCell>
                                         <div className="flex space-x-2">
                                             {/* Detail Button */}
@@ -213,10 +218,10 @@ export const AdminLeave: React.FC = () => {
                                                     title={action.label}
                                                     className={action.color}
                                                 >
-                                                    {action.type === 'confirm' && <Check className="h-4 w-4" />}
-                                                    {action.type === 'reject' && <X className="h-4 w-4" />}
-                                                    {action.type === 'reverse' && <Undo className="h-4 w-4" />}
-                                                    {action.type === 'cancel' && <X className="h-4 w-4" />}
+                                                    {action.type === "confirm" && <Check className="h-4 w-4" />}
+                                                    {action.type === "reject" && <X className="h-4 w-4" />}
+                                                    {action.type === "reverse" && <Undo className="h-4 w-4" />}
+                                                    {action.type === "cancel" && <X className="h-4 w-4" />}
                                                 </Button>
                                             ))}
                                         </div>
@@ -227,17 +232,14 @@ export const AdminLeave: React.FC = () => {
                     </TableBody>
                 </Table>
 
-                {leaves.length === 0 && !loading && (
-                    <div className="text-center py-12 text-gray-500">
-                        Tidak ada pengajuan cuti
-                    </div>
-                )}
+                {leaves.length === 0 && !loading && <div className="text-center py-12 text-gray-500">Tidak ada pengajuan cuti</div>}
 
                 {pagination.totalPages > 1 && (
                     <div className="flex items-center justify-between mt-6 px-4">
                         <div className="text-sm text-gray-600">
                             Menampilkan {leaves.length} dari {pagination.total} pengajuan cuti
                         </div>
+
                         <div className="flex items-center space-x-2">
                             <Button
                                 variant="outline"
@@ -266,79 +268,59 @@ export const AdminLeave: React.FC = () => {
             </Card>
 
             {/* Detail Modal */}
-            <Modal
-                isOpen={isDetailModalOpen}
-                onClose={closeModals}
-                title="Detail Pengajuan Cuti"
-                size="lg"
-            >
+            <Modal isOpen={isDetailModalOpen} onClose={closeModals} title="Detail Pengajuan Cuti" size="lg">
                 {selectedLeave && (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Nama Staff
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Nama Staff</label>
                                 <p className="text-gray-900">{selectedLeave.user?.name}</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Email
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Email</label>
                                 <p className="text-gray-900">{selectedLeave.user?.email}</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Periode
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Periode</label>
                                 <p className="text-gray-900">
                                     {formatDate(selectedLeave.startDate)} - {formatDate(selectedLeave.endDate)}
                                 </p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Durasi
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Durasi</label>
                                 <p className="text-gray-900">{selectedLeave.days} hari</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Status
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Status</label>
                                 <span
                                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                        selectedLeave.status?.name || 'Unknown'
+                                        selectedLeave.status?.name || "Unknown"
                                     )}`}
                                 >
-                                    {selectedLeave.status?.name || 'Unknown'}
+                                    {selectedLeave.status?.name || "Unknown"}
                                 </span>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Tanggal Pengajuan
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Tanggal Pengajuan</label>
                                 <p className="text-gray-900">{formatDate(selectedLeave.createdAt)}</p>
                             </div>
                         </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-black mb-1">
-                                Alasan Cuti
-                            </label>
+                            <label className="block text-sm font-medium text-black mb-1">Alasan Cuti</label>
                             <p className="text-gray-900 whitespace-pre-wrap">{selectedLeave.reason}</p>
                         </div>
+
                         {selectedLeave.managerNotes && (
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Catatan Manager
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Catatan Manager</label>
                                 <p className="text-gray-900 whitespace-pre-wrap">{selectedLeave.managerNotes}</p>
                             </div>
                         )}
+
                         {selectedLeave.approvedBy && (
                             <div>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                    Disetujui Oleh
-                                </label>
+                                <label className="block text-sm font-medium text-black mb-1">Disetujui Oleh</label>
                                 <p className="text-gray-900">{selectedLeave.approvedBy.name}</p>
                             </div>
                         )}
@@ -350,39 +332,41 @@ export const AdminLeave: React.FC = () => {
             <Modal
                 isOpen={isActionModalOpen}
                 onClose={closeModals}
-                title={actionType ? `${
-                    actionType === 'confirm' ? 'Konfirmasi' :
-                    actionType === 'reject' ? 'Tolak' :
-                    actionType === 'reverse' ? 'Reverse' :
-                    'Batalkan'
-                } Cuti` : ''}
+                title={
+                    actionType
+                        ? `${actionType === "confirm" ? "Konfirmasi" : actionType === "reject" ? "Tolak" : actionType === "reverse" ? "Reverse" : "Batalkan"} Cuti`
+                        : ""
+                }
                 size="md"
             >
                 {selectedLeave && actionType && (
                     <div className="space-y-4">
                         <div>
                             <p className="text-gray-700">
-                                Anda akan <span className="font-semibold">{
-                                    actionType === 'confirm' ? 'mengonfirmasi' :
-                                    actionType === 'reject' ? 'menolak' :
-                                    actionType === 'reverse' ? 'mereverse' :
-                                    'membatalkan'
-                                }</span> pengajuan cuti dari:
+                                Anda akan{" "}
+                                <span className="font-semibold">
+                                    {actionType === "confirm"
+                                        ? "mengonfirmasi"
+                                        : actionType === "reject"
+                                            ? "menolak"
+                                            : actionType === "reverse"
+                                                ? "mereverse"
+                                                : "membatalkan"}
+                                </span>{" "}
+                                pengajuan cuti dari:
                             </p>
+
                             <div className="mt-2 p-3 bg-gray-50 rounded-lg">
                                 <p className="font-medium">{selectedLeave.user?.name}</p>
                                 <p className="text-sm text-gray-600">
-                                    {formatDate(selectedLeave.startDate)} - {formatDate(selectedLeave.endDate)}
-                                    ({selectedLeave.days} hari)
+                                    {formatDate(selectedLeave.startDate)} - {formatDate(selectedLeave.endDate)} ({selectedLeave.days} hari)
                                 </p>
                                 <p className="text-sm text-gray-600 mt-1">{selectedLeave.reason}</p>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-black mb-2">
-                                Catatan (Opsional)
-                            </label>
+                            <label className="block text-sm font-medium text-black mb-2">Catatan (Opsional)</label>
                             <textarea
                                 value={managerNotes}
                                 onChange={(e) => setManagerNotes(e.target.value)}
@@ -393,28 +377,23 @@ export const AdminLeave: React.FC = () => {
                         </div>
 
                         <div className="flex justify-end space-x-3 pt-4">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={closeModals}
-                            >
+                            <Button type="button" variant="outline" onClick={closeModals}>
                                 Batal
                             </Button>
+
                             <Button
                                 onClick={handleAction}
                                 className={
-                                    actionType === 'confirm' ? 'bg-green-600 hover:bg-green-700' :
-                                    actionType === 'reject' ? 'bg-red-600 hover:bg-red-700' :
-                                    actionType === 'reverse' ? 'bg-orange-600 hover:bg-orange-700' :
-                                    'bg-red-600 hover:bg-red-700'
+                                    actionType === "confirm"
+                                        ? "bg-green-600 hover:bg-green-700"
+                                        : actionType === "reject"
+                                            ? "bg-red-600 hover:bg-red-700"
+                                            : actionType === "reverse"
+                                                ? "bg-orange-600 hover:bg-orange-700"
+                                                : "bg-red-600 hover:bg-red-700"
                                 }
                             >
-                                {
-                                    actionType === 'confirm' ? 'Konfirmasi' :
-                                    actionType === 'reject' ? 'Tolak' :
-                                    actionType === 'reverse' ? 'Reverse' :
-                                    'Batalkan'
-                                }
+                                {actionType === "confirm" ? "Konfirmasi" : actionType === "reject" ? "Tolak" : actionType === "reverse" ? "Reverse" : "Batalkan"}
                             </Button>
                         </div>
                     </div>
