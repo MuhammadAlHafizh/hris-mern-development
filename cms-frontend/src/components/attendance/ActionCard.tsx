@@ -209,7 +209,7 @@ export const ActionCard = ({
                     )}
 
                     {/* Sick Leave Button */}
-                    {canSickLeave && !isTodayHoliday && !isTodayWeekend && (
+                    {canSickLeave && !isTodayHoliday && (
                         <Button
                             onClick={() => setShowSickLeaveModal(true)}
                             disabled={isLoading}
